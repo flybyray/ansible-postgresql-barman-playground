@@ -1,2 +1,3 @@
-ansible==2.8.5
+ansible
 jmespath
+netaddr

@@ -4,11 +4,6 @@
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 Vagrant.configure("2") do |config|
 
-  ## vagrant-cachier configuration
-  if Vagrant.has_plugin?("vagrant-cachier")
-    config.cache.scope = :machine
-  end
-
   ## SSH settings
   # Do not auto-generate an insecure SSH key (keep the default).
   # Indicates local private ssh-key as first option to be used by Vagrant.
@@ -22,24 +17,32 @@ Vagrant.configure("2") do |config|
                       run: 'once',
                       source: "~/.ssh/id_rsa.pub",
                       destination: "~/.ssh/authorized_keys"
-
-  # Limit memory on host
-  config.vm.provider :virtualbox do |vb|
-    vb.memory = 256
-  end
+  config.vm.provision "file",
+                      run: 'once',
+                      source: "~/.ssh/id_rsa",
+                      destination: "~/.ssh/id_rsa"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  {
-    'paul'   => '192.168.33.10',
-    'john'   => '192.168.33.11',
-    'george' => '192.168.33.12',
-    'ringo'  => '192.168.33.13',
-  }.each do |short_name, ip|
+  [
+    'paul',
+    'john',
+    'george',
+    'ringo',
+  ].each do |short_name|
     config.vm.define short_name do |host|
-      host.vm.box = "bento/centos-7"
-      host.vm.hostname = "#{short_name}"
-      host.vm.network :private_network, ip: ip
+      host.vm.box = "centos/7"
+      host.vm.provider "hyperv" do |hv|
+        hv.vmname = "#{short_name}"
+        hv.memory = 768
+        hv.maxmemory = 2048
+        hv.cpus = 2
+        hv.linked_clone = true
+      end
+      host.vm.hostname = "#{short_name}.dev.in.ndgit.com"
+      host.vm.network "public_network", bridge: "Default Switch"
+      host.vm.synced_folder ".", "/vagrant", type: "rsync",
+          rsync__exclude: ".git/"
     end
   end
 

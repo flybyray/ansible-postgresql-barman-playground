@@ -59,3 +59,6 @@ postgresql_conf: |
     archive_timeout = 5min
     archive_mode = always
     archive_command = '/bin/true'
+
+net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+net_mask_ipaddr_net: "{{ net_mask | ipaddr('net') }}"
